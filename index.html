@@ -55,11 +55,11 @@ body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(-
 .site-header{display:flex;align-items:center;justify-content:space-between;padding:28px 0 0;}
 .logo{font-family:'DM Serif Display',serif;font-size:28px;letter-spacing:.5px;background:linear-gradient(135deg,#e8c97e,#b48ef4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .logo em{font-style:italic;}
-.clock-pill{background:var(--surface);border:1px solid var(--rim);border-radius:100px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--soft);display:flex;gap:8px;align-items:center;}
+.clock-pill{background:var(--surface);border:1px solid var(--rim);border-radius:100px;padding:10px 18px;font-size:16px;font-weight:500;color:var(--soft);display:flex;gap:8px;align-items:center;}
 .clock-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.date-line{color:var(--muted);font-size:13px;margin:6px 0 32px;padding-left:1px;}
-.s-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px;}
+.date-line{color:var(--muted);font-size:15px;margin:6px 0 32px;padding-left:1px;}
+.s-label{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:14px;}
 
 /* CARDS */
 .card{background:var(--surface);border:1px solid var(--rim);border-radius:20px;padding:24px;margin-bottom:16px;position:relative;overflow:hidden;}
@@ -82,8 +82,8 @@ body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(-
 .r-card{background:var(--surface2);border-radius:14px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--rim);}
 .r-card.star{border-color:rgba(180,142,244,0.45);background:rgba(124,92,191,0.12)}
 .r-time{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text)}
-.r-meta{color:var(--muted);font-size:12px;margin-top:2px}
-.r-vibe{font-size:11px;margin-top:5px;color:var(--muted);line-height:1.3;}
+.r-meta{color:var(--muted);font-size:14px;margin-top:4px}
+.r-vibe{font-size:13px;margin-top:6px;color:var(--muted);line-height:1.4;}
 .r-card.sunny .r-vibe{color:rgba(232,201,126,0.7);}
 .r-badge{font-size:9px;background:rgba(180,142,244,0.2);color:var(--accent);padding:4px 9px;border-radius:20px;font-weight:600;letter-spacing:1px;}
 .r-card.sunny{background:rgba(232,201,126,0.08);border-color:rgba(232,201,126,0.3);}
@@ -94,23 +94,23 @@ body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(-
 /* HIST */
 .hist-inputs{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;}
 .hist-group{display:flex;flex-direction:column;align-items:center;gap:6px}
-.hist-group label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.hist-group label{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
 .hist-group .mini-time{display:flex;align-items:center;gap:3px}
 .hist-group input{width:52px;background:var(--surface2);border:1px solid var(--rim);border-radius:10px;color:var(--text);font-size:20px;font-weight:300;text-align:center;padding:0;height:48px;line-height:48px;outline:none;font-family:'DM Serif Display',serif;transition:border-color .2s;-moz-appearance:textfield;}
 .hist-group input::-webkit-inner-spin-button,.hist-group input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 .hist-group input:focus{border-color:var(--accent)}
 .hist-group .ms{color:var(--muted);font-size:20px}
-.btn-save{width:100%;padding:13px;background:var(--surface2);border:1px solid var(--rim);border-radius:12px;color:var(--soft);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;}
+.btn-save{width:100%;padding:14px;background:var(--surface2);border:1px solid var(--rim);border-radius:12px;color:var(--soft);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;}
 .btn-save:hover{border-color:var(--accent);color:var(--accent)}
 .avg-row{display:flex;gap:10px;margin-bottom:20px;}
 .avg-pill{flex:1;background:var(--surface2);border-radius:12px;padding:12px 8px;text-align:center;border:1px solid var(--rim);}
 .avg-pill .av-n{font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent)}
-.avg-pill .av-l{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.avg-pill .av-l{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:1px;text-transform:uppercase}
 .chart-box{margin-bottom:20px}
 .chart-svg{width:100%;height:70px;display:block}
 .h-entry{background:var(--surface2);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--rim);}
 .h-entry .he-t{font-family:'DM Serif Display',serif;font-size:20px}
-.h-entry .he-m{color:var(--muted);font-size:12px;margin-top:2px}
+.h-entry .he-m{color:var(--muted);font-size:14px;margin-top:4px}
 .btn-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;transition:color .2s}
 .btn-del:hover{color:#f47}
 .h-empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 0}
@@ -147,9 +147,9 @@ body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(-
 .stage-item:last-child{border-bottom:none}
 .stage-num{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--rim);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;margin-top:2px;}
 .stage-num.rem{background:rgba(180,142,244,0.15);border-color:var(--accent)}
-.stage-title{font-size:14px;font-weight:600;margin-bottom:4px}
-.stage-desc{color:var(--muted);font-size:13px;line-height:1.5}
-.info-intro{color:var(--soft);font-size:14px;line-height:1.7;margin-bottom:20px}
+.stage-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.stage-desc{color:var(--muted);font-size:15px;line-height:1.6}
+.info-intro{color:var(--soft);font-size:16px;line-height:1.8;margin-bottom:20px}
 </style>
 </head>
 <body>
@@ -177,6 +177,15 @@ body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(-
   <div class="date-line" id="live-date"></div>
 
   <!-- CALC -->
+  <!-- TOP NAV -->
+  <div class="top-nav">
+    <button class="active" id="nav-calc" onclick="showSection('calc')">🌙 Ciclos</button>
+    <button id="nav-hist" onclick="showSection('hist')">📊 Histórico</button>
+    <button id="nav-info" onclick="showSection('info')">💡 Info</button>
+  </div>
+
+  <!-- SECTION: CALC -->
+  <div class="app-section active" id="section-calc">
   <div class="s-label">Calculadora de ciclos</div>
   <div class="card">
     <div class="calc-toggle">
@@ -193,7 +202,10 @@ body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(-
     <div class="results" id="calc-results"></div>
   </div>
 
-  <!-- HIST -->
+  </div><!-- /section-calc -->
+
+  <!-- SECTION: HIST -->
+  <div class="app-section" id="section-hist">
   <div class="s-label">Seu sono</div>
   <div class="card">
     <div class="avg-row">
@@ -226,7 +238,10 @@ body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(-
     <div style="margin-top:20px" id="hist-list"></div>
   </div>
 
-  <!-- INFO -->
+  </div><!-- /section-hist -->
+
+  <!-- SECTION: INFO -->
+  <div class="app-section" id="section-info">
   <div class="s-label">Sobre o sono</div>
   <div class="card">
     <p class="info-intro">Cada noite seu cérebro percorre ciclos de 90–110 minutos compostos por 5 etapas. Acordar no fim de um ciclo completo reduz a inércia do sono e faz você se sentir descansado.</p>
@@ -292,6 +307,15 @@ window.addEventListener('resize',()=>{resizeCanvas();initStars();});
 // ── Splash ──────────────────────────────────────────────────────────────────
 function enterApp(){document.getElementById('splash').classList.add('hide');document.getElementById('app').classList.add('show');}
 
+
+// ── Section nav ────────────────────────────────────────────────────────────
+function showSection(s){
+  ['calc','hist','info'].forEach(n=>{
+    document.getElementById('section-'+n).classList.toggle('active', n===s);
+    document.getElementById('nav-'+n).classList.toggle('active', n===s);
+  });
+  if(s==='hist'){renderHist();}
+}
 // ── Clock ───────────────────────────────────────────────────────────────────
 const pad=n=>String(n).padStart(2,'0');
 function tick(){const d=new Date();document.getElementById('live-time').textContent=pad(d.getHours())+':'+pad(d.getMinutes());const days=['domingo','segunda','terça','quarta','quinta','sexta','sábado'],months=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];document.getElementById('live-date').textContent=days[d.getDay()]+', '+d.getDate()+' de '+months[d.getMonth()]+' · '+d.getFullYear();}
