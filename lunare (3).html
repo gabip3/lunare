@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lunare</title>
+<meta name="theme-color" content="#0e0c15"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Lunare"/>
+<link rel="manifest" href="data:application/json,{
+  %22name%22:%22Lunare%22,
+  %22short_name%22:%22Lunare%22,
+  %22description%22:%22Seu guia de ciclos do sono%22,
+  %22start_url%22:%22.%22,
+  %22display%22:%22standalone%22,
+  %22background_color%22:%22%230e0c15%22,
+  %22theme_color%22:%22%230e0c15%22,
+  %22orientation%22:%22portrait%22,
+  %22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230e0c15'/%3E%3Ctext y='.9em' font-size='400' x='56'%3E🌙%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22,%22purpose%22:%22any maskable%22}]
+}"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0c15;--surface:#17142a;--surface2:#1f1b35;
+  --rim:rgba(255,255,255,0.07);--accent:#b48ef4;--accent2:#7c5cbf;
+  --gold:#e8c97e;--text:#f0ecff;--muted:#7a7090;--soft:#c5bde0;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);font-family:'DM Sans',system-ui,sans-serif;color:var(--text);}
+#star-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;width:100%;height:100%;}
+.bg-glow{position:fixed;top:-15%;left:50%;transform:translateX(-50%);width:700px;height:700px;pointer-events:none;z-index:0;background:radial-gradient(ellipse,rgba(124,92,191,0.16) 0%,transparent 68%);}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);transition:opacity .8s ease,transform .8s ease;}
+#splash.hide{opacity:0;transform:scale(1.04);pointer-events:none;}
+.splash-moon{font-size:72px;line-height:1;animation:moonFloat 4s ease-in-out infinite;filter:drop-shadow(0 0 32px rgba(180,142,244,0.5));margin-bottom:32px;}
+@keyframes moonFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.splash-logo{font-family:'DM Serif Display',serif;font-size:52px;letter-spacing:1px;background:linear-gradient(135deg,#e8c97e 0%,#b48ef4 60%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;}
+.splash-logo em{font-style:italic;}
+.splash-tagline{color:var(--muted);font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:64px;}
+.splash-enter{background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:100px;color:#fff;font-size:15px;font-weight:600;font-family:inherit;padding:16px 44px;cursor:pointer;box-shadow:0 0 40px rgba(180,142,244,0.3);letter-spacing:.5px;transition:transform .15s,box-shadow .15s;}
+.splash-enter:hover{transform:scale(1.04);box-shadow:0 0 60px rgba(180,142,244,0.45);}
+.splash-hint{position:absolute;bottom:40px;color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;animation:blink 2.4s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:.9}}
+
+/* APP */
+#app{position:fixed;inset:0;z-index:10;overflow-y:auto;overflow-x:hidden;opacity:0;pointer-events:none;transition:opacity .6s ease .2s;}
+#app.show{opacity:1;pointer-events:auto;}
+.wrap{position:relative;z-index:1;max-width:430px;margin:0 auto;padding:0 20px 60px;}
+
+/* HEADER */
+.site-header{display:flex;align-items:center;justify-content:space-between;padding:28px 0 0;}
+.logo{font-family:'DM Serif Display',serif;font-size:28px;letter-spacing:.5px;background:linear-gradient(135deg,#e8c97e,#b48ef4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo em{font-style:italic;}
+.clock-pill{background:var(--surface);border:1px solid var(--rim);border-radius:100px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--soft);display:flex;gap:8px;align-items:center;}
+.clock-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.date-line{color:var(--muted);font-size:13px;margin:6px 0 32px;padding-left:1px;}
+.s-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--rim);border-radius:20px;padding:24px;margin-bottom:16px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(180,142,244,0.3),transparent);}
+
+/* CALC */
+.calc-toggle{display:flex;gap:4px;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:20px;}
+.calc-toggle button{flex:1;padding:9px;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:500;color:var(--muted);background:none;cursor:pointer;transition:all .2s;}
+.calc-toggle button.on{background:var(--accent2);color:#fff;}
+.time-big{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:20px;}
+.time-big input{width:72px;background:var(--surface2);border:1px solid var(--rim);border-radius:12px;color:var(--text);font-family:'DM Serif Display',serif;font-size:36px;text-align:center;padding:0;height:64px;line-height:64px;display:flex;align-items:center;justify-content:center;outline:none;transition:border-color .2s;-moz-appearance:textfield;}
+.time-big input::-webkit-inner-spin-button,.time-big input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.time-big input:focus{border-color:var(--accent)}
+.time-big .sep{font-family:'DM Serif Display',serif;font-size:36px;color:var(--muted);margin-bottom:4px;}
+.btn-now{display:block;margin:0 auto 20px;background:none;border:1px solid var(--rim);border-radius:10px;color:var(--muted);font-size:12px;font-family:inherit;cursor:pointer;padding:7px 16px;transition:all .2s;}
+.btn-now:hover{border-color:var(--accent);color:var(--accent)}
+.btn-go{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:.3px;transition:opacity .2s;}
+.btn-go:hover{opacity:.88}
+.results{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.r-card{background:var(--surface2);border-radius:14px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--rim);}
+.r-card.star{border-color:rgba(180,142,244,0.45);background:rgba(124,92,191,0.12)}
+.r-time{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text)}
+.r-meta{color:var(--muted);font-size:12px;margin-top:2px}
+.r-vibe{font-size:11px;margin-top:5px;color:var(--muted);line-height:1.3;}
+.r-card.sunny .r-vibe{color:rgba(232,201,126,0.7);}
+.r-badge{font-size:9px;background:rgba(180,142,244,0.2);color:var(--accent);padding:4px 9px;border-radius:20px;font-weight:600;letter-spacing:1px;}
+.r-card.sunny{background:rgba(232,201,126,0.08);border-color:rgba(232,201,126,0.3);}
+.r-card.sunny.star{background:rgba(232,201,126,0.18);border-color:rgba(232,201,126,0.6);box-shadow:0 0 16px rgba(232,201,126,0.1);}
+.r-card.sunny .r-time{background:linear-gradient(135deg,#e8c97e,#f0b429)!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;background-clip:text!important;color:transparent!important;}
+.sunny-badge{background:rgba(232,201,126,0.2)!important;color:#e8c97e!important;}
+
+/* HIST */
+.hist-inputs{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;}
+.hist-group{display:flex;flex-direction:column;align-items:center;gap:6px}
+.hist-group label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.hist-group .mini-time{display:flex;align-items:center;gap:3px}
+.hist-group input{width:52px;background:var(--surface2);border:1px solid var(--rim);border-radius:10px;color:var(--text);font-size:20px;font-weight:300;text-align:center;padding:0;height:48px;line-height:48px;outline:none;font-family:'DM Serif Display',serif;transition:border-color .2s;-moz-appearance:textfield;}
+.hist-group input::-webkit-inner-spin-button,.hist-group input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.hist-group input:focus{border-color:var(--accent)}
+.hist-group .ms{color:var(--muted);font-size:20px}
+.btn-save{width:100%;padding:13px;background:var(--surface2);border:1px solid var(--rim);border-radius:12px;color:var(--soft);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;}
+.btn-save:hover{border-color:var(--accent);color:var(--accent)}
+.avg-row{display:flex;gap:10px;margin-bottom:20px;}
+.avg-pill{flex:1;background:var(--surface2);border-radius:12px;padding:12px 8px;text-align:center;border:1px solid var(--rim);}
+.avg-pill .av-n{font-family:'DM Serif Display',serif;font-size:22px;color:var(--accent)}
+.avg-pill .av-l{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:1px;text-transform:uppercase}
+.chart-box{margin-bottom:20px}
+.chart-svg{width:100%;height:70px;display:block}
+.h-entry{background:var(--surface2);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--rim);}
+.h-entry .he-t{font-family:'DM Serif Display',serif;font-size:20px}
+.h-entry .he-m{color:var(--muted);font-size:12px;margin-top:2px}
+.btn-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;transition:color .2s}
+.btn-del:hover{color:#f47}
+.h-empty{color:var(--muted);font-size:14px;text-align:center;padding:20px 0}
+
+/* SOUNDS */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+50%{height:14px}}
+
+
+
+
+
+
+
+
+
+
+/* INFO */
+.stages-donut{display:flex;justify-content:center;margin:20px 0 24px;overflow:visible;}
+.stage-item{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--rim);}
+.stage-item:last-child{border-bottom:none}
+.stage-num{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--rim);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;margin-top:2px;}
+.stage-num.rem{background:rgba(180,142,244,0.15);border-color:var(--accent)}
+.stage-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.stage-desc{color:var(--muted);font-size:13px;line-height:1.5}
+.info-intro{color:var(--soft);font-size:14px;line-height:1.7;margin-bottom:20px}
+</style>
+</head>
+<body>
+
+<canvas id="star-canvas"></canvas>
+<div class="bg-glow"></div>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-moon">🌙</div>
+  <div class="splash-logo">Lu<em>n</em>are</div>
+  <div class="splash-tagline">Durma com sabedoria</div>
+  <button class="splash-enter" onclick="enterApp()">Começar</button>
+  <div class="splash-hint">seu guia de ciclos do sono</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="wrap">
+
+  <header class="site-header">
+    <div class="logo">Lu<em>n</em>are</div>
+    <div class="clock-pill"><span class="dot"></span><span id="live-time">--:--</span></div>
+  </header>
+  <div class="date-line" id="live-date"></div>
+
+  <!-- CALC -->
+  <div class="s-label">Calculadora de ciclos</div>
+  <div class="card">
+    <div class="calc-toggle">
+      <button class="on" id="tog-wake" onclick="setMode('wake')">🌙 Vou dormir às...</button>
+      <button id="tog-sleep" onclick="setMode('sleep')">☀️ Preciso acordar às...</button>
+    </div>
+    <div class="time-big">
+      <input type="number" id="cp-h" min="0" max="23" value="23" oninput="clamp(this,0,23)"/>
+      <span class="sep">:</span>
+      <input type="number" id="cp-m" min="0" max="59" value="00" oninput="clamp(this,0,59)"/>
+    </div>
+    <button class="btn-now" onclick="useNow()">usar hora atual</button>
+    <button class="btn-go" onclick="calculate()">Calcular →</button>
+    <div class="results" id="calc-results"></div>
+  </div>
+
+  <!-- HIST -->
+  <div class="s-label">Seu sono</div>
+  <div class="card">
+    <div class="avg-row">
+      <div class="avg-pill"><div class="av-n" id="avg-w">—</div><div class="av-l">Semanal</div></div>
+      <div class="avg-pill"><div class="av-n" id="avg-m">—</div><div class="av-l">Mensal</div></div>
+      <div class="avg-pill"><div class="av-n" id="avg-t">—</div><div class="av-l">Total</div></div>
+    </div>
+    <div class="chart-box">
+      <svg class="chart-svg" id="hist-chart" viewBox="0 0 380 70" preserveAspectRatio="none"></svg>
+    </div>
+    <div class="hist-inputs">
+      <div class="hist-group">
+        <label>Dormiu</label>
+        <div class="mini-time">
+          <input type="number" id="bed-h" min="0" max="23" value="23" oninput="clamp(this,0,23)"/>
+          <span class="ms">:</span>
+          <input type="number" id="bed-m" min="0" max="59" value="00" oninput="clamp(this,0,59)"/>
+        </div>
+      </div>
+      <div class="hist-group">
+        <label>Acordou</label>
+        <div class="mini-time">
+          <input type="number" id="woke-h" min="0" max="23" value="07" oninput="clamp(this,0,23)"/>
+          <span class="ms">:</span>
+          <input type="number" id="woke-m" min="0" max="59" value="00" oninput="clamp(this,0,59)"/>
+        </div>
+      </div>
+    </div>
+    <button class="btn-save" onclick="addHistory()">+ Registrar noite</button>
+    <div style="margin-top:20px" id="hist-list"></div>
+  </div>
+
+  <!-- INFO -->
+  <div class="s-label">Sobre o sono</div>
+  <div class="card">
+    <p class="info-intro">Cada noite seu cérebro percorre ciclos de 90–110 minutos compostos por 5 etapas. Acordar no fim de um ciclo completo reduz a inércia do sono e faz você se sentir descansado.</p>
+    <div class="stages-donut">
+      <!-- Donut com números DENTRO de cada fatia -->
+      <svg width="210" height="210" viewBox="-5 -5 210 210" style="overflow:visible;display:block;margin:0 auto;">
+        <defs>
+          <mask id="dm">
+            <rect x="-5" y="-5" width="210" height="210" fill="white"/>
+            <circle cx="100" cy="100" r="50" fill="black"/>
+          </mask>
+        </defs>
+        <g mask="url(#dm)">
+          <path d="M100,100 L100.00,12.00 A88,88 0 0,1 183.69,72.81 Z" fill="#2a2245" stroke="#0e0c15" stroke-width="2"/>
+          <path d="M100,100 L183.69,72.81 A88,88 0 0,1 151.73,171.19 Z" fill="#231d3f" stroke="#0e0c15" stroke-width="2"/>
+          <path d="M100,100 L151.73,171.19 A88,88 0 0,1 48.27,171.19 Z" fill="#1d183a" stroke="#0e0c15" stroke-width="2"/>
+          <path d="M100,100 L48.27,171.19 A88,88 0 0,1 16.31,72.81 Z" fill="#241e42" stroke="#0e0c15" stroke-width="2"/>
+          <path d="M100,100 L16.31,72.81 A88,88 0 0,1 100.00,12.00 Z" fill="rgba(180,142,244,0.3)" stroke="#0e0c15" stroke-width="2"/>
+        </g>
+        <circle cx="100" cy="100" r="34" fill="#0e0c15"/>
+        <text x="100" y="104" fill="#7a7090" font-size="8" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif">ciclos</text>
+        <text x="142.32" y="41.75" fill="#c5bde0" font-size="10" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-weight="600">1</text>
+        <text x="168.48" y="122.25" fill="#c5bde0" font-size="10" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-weight="600">2</text>
+        <text x="100.00" y="172.00" fill="#c5bde0" font-size="10" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-weight="600">3</text>
+        <text x="31.52" y="122.25" fill="#c5bde0" font-size="10" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-weight="600">4</text>
+        <text x="57.68" y="41.75" fill="#b48ef4" font-size="8" text-anchor="middle" dominant-baseline="middle" font-family="DM Sans,sans-serif" font-weight="700">REM</text>
+      </svg>
+    </div>
+    <div class="stage-item">
+      <div class="stage-num">1</div>
+      <div><div class="stage-title">Sono leve</div><div class="stage-desc">Transição entre vigília e sono. Você pode ser facilmente acordado — muitas pessoas sentem a sensação de queda com espasmos musculares.</div></div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-num">2</div>
+      <div><div class="stage-title">Sono estável</div><div class="stage-desc">Os olhos param de se mover e as ondas cerebrais ficam mais lentas. O corpo começa a reduzir temperatura e ritmo cardíaco.</div></div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-num">3</div>
+      <div><div class="stage-title">Sono profundo I</div><div class="stage-desc">Ondas delta lentas aparecem. É o sono mais restaurador para o corpo — o sistema imunológico se fortalece e os músculos se recuperam.</div></div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-num">4</div>
+      <div><div class="stage-title">Sono profundo II</div><div class="stage-desc">Quase exclusivamente ondas delta. Muito difícil acordar nessa fase. Essencial para memória de longo prazo e recuperação física intensa.</div></div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-num rem">R</div>
+      <div><div class="stage-title">REM — O sono dos sonhos</div><div class="stage-desc">Olhos se movem rapidamente, o cérebro fica quase tão ativo quanto acordado. Os sonhos acontecem aqui. Fundamental para criatividade, aprendizado e regulação emocional.</div></div>
+    </div>
+  </div>
+
+</div></div>
+
+<script>
+// ── Canvas Stars ────────────────────────────────────────────────────────────
+const canvas=document.getElementById('star-canvas'),ctx=canvas.getContext('2d');
+let stars=[];
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+function initStars(){stars=[];for(let i=0;i<130;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.3+0.2,base:Math.random()*Math.PI*2,speed:Math.random()*0.5+0.2,amp:Math.random()*0.45+0.08});}
+function drawStars(ts){ctx.clearRect(0,0,canvas.width,canvas.height);const t=ts/1000;for(const s of stars){const o=s.amp+s.amp*Math.sin(s.speed*t+s.base);ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${o})`;ctx.fill();}requestAnimationFrame(drawStars);}
+resizeCanvas();initStars();requestAnimationFrame(drawStars);
+window.addEventListener('resize',()=>{resizeCanvas();initStars();});
+
+// ── Splash ──────────────────────────────────────────────────────────────────
+function enterApp(){document.getElementById('splash').classList.add('hide');document.getElementById('app').classList.add('show');}
+
+// ── Clock ───────────────────────────────────────────────────────────────────
+const pad=n=>String(n).padStart(2,'0');
+function tick(){const d=new Date();document.getElementById('live-time').textContent=pad(d.getHours())+':'+pad(d.getMinutes());const days=['domingo','segunda','terça','quarta','quinta','sexta','sábado'],months=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];document.getElementById('live-date').textContent=days[d.getDay()]+', '+d.getDate()+' de '+months[d.getMonth()]+' · '+d.getFullYear();}
+tick();setInterval(tick,1000);
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function clamp(el,mn,mx){let v=parseInt(el.value);if(isNaN(v))v=mn;el.value=Math.min(mx,Math.max(mn,v));}
+function toM(h,m){return h*60+m;}function fromM(mins){const t=((mins%1440)+1440)%1440;return{h:Math.floor(t/60),m:t%60};}
+function nowHM(){const d=new Date();return{h:d.getHours(),m:d.getMinutes()};}
+
+// ── Calc ────────────────────────────────────────────────────────────────────
+let mode='wake';
+function setMode(m){mode=m;document.getElementById('tog-wake').classList.toggle('on',m==='wake');document.getElementById('tog-sleep').classList.toggle('on',m==='sleep');document.getElementById('calc-results').innerHTML='';}
+function useNow(){const n=nowHM();document.getElementById('cp-h').value=pad(n.h);document.getElementById('cp-m').value=pad(n.m);}
+function calculate(){
+  const h=parseInt(document.getElementById('cp-h').value)||0,m=parseInt(document.getElementById('cp-m').value)||0;
+  const items=mode==='wake'?calcWake(h,m):calcSleep(h,m);
+  // wake mode: you input sleep time → shows wake times (sunny)
+  // sleep mode: you input wake time → shows sleep times (moon)
+  const isSunny = mode==='wake';
+  const lbl = isSunny ? '🌅 ACORDE ÀS' : '🌙 DURMA ÀS';
+  const subLabel = isSunny
+    ? 'Se dormir às '+pad(h)+':'+pad(m)+', acorde em:'
+    : 'Para acordar às '+pad(h)+':'+pad(m)+', durma em:';
+  document.getElementById('calc-results').innerHTML=
+    `<div class="s-label" style="margin-top:4px">${lbl}</div>`+
+    `<div style="color:var(--muted);font-size:12px;margin-bottom:10px">${subLabel}</div>`+
+    items.map(i=>{
+      const cardClass = isSunny
+        ? (i.ideal ? 'r-card sunny star' : 'r-card sunny')
+        : (i.ideal ? 'r-card star' : 'r-card');
+      const vibes = {
+        6:{wake:'😄 Vai acordar renovado e cheio de energia!',sleep:'😌 Sono completo. Seu corpo vai agradecer.'},
+        5:{wake:'🙂 Vai acordar bem disposto e descansado.',sleep:'👌 Boa noite garantida. Durma tranquilo.'},
+        4:{wake:'😐 Aceitável... mas podia ser melhor.',sleep:'😅 Dá pra sobreviver. Capriche amanhã.'},
+        3:{wake:'😵 Vai acordar grogue, chato e meio zumbi.',sleep:'💀 Sério? Vai ser um dia difícil hein.'},
+      };
+      const vibe = (vibes[i.cycles]||{})[isSunny?'wake':'sleep']||'';
+      const badge = i.ideal ? '<span class="r-badge '+(isSunny?'sunny-badge':'')+'">IDEAL</span>' : '';
+      return '<div class="'+cardClass+'">'
+        +'<div style="flex:1">'
+        +'<div class="r-time">'+pad(i.h)+':'+pad(i.m)+'</div>'
+        +'<div class="r-meta">'+i.cycles+' ciclos · '+i.hrs+'h'+(i.mins?i.mins+'min':'')+' de sono</div>'
+        +'<div class="r-vibe">'+vibe+'</div>'
+        +'</div>'+badge+'</div>';
+    }).join('');
+}
+function calcWake(sh,sm){return[6,5,4,3].map(c=>{const t=fromM(toM(sh,sm)+14+c*90);return{...t,cycles:c,hrs:Math.floor(c*90/60),mins:c*90%60,ideal:c>=5};});}
+function calcSleep(wh,wm){return[6,5,4,3].map(c=>{const t=fromM(toM(wh,wm)-c*90-14);return{...t,cycles:c,hrs:Math.floor(c*90/60),mins:c*90%60,ideal:c>=5};});}
+
+// ── History (localStorage) ──────────────────────────────────────────────────
+let hist=JSON.parse(localStorage.getItem('lunare-hist')||'[]');
+
+function saveHist(){localStorage.setItem('lunare-hist',JSON.stringify(hist));}
+
+function addHistory(){
+  const bh=parseInt(document.getElementById('bed-h').value)||0,bm=parseInt(document.getElementById('bed-m').value)||0;
+  const wh=parseInt(document.getElementById('woke-h').value)||0,wm=parseInt(document.getElementById('woke-m').value)||0;
+  let dur=toM(wh,wm)-toM(bh,bm);if(dur<0)dur+=1440;
+  const cycles=+(dur/90).toFixed(2);
+  hist.unshift({bh,bm,wh,wm,dur,cycles,date:new Date().toISOString().split('T')[0]});
+  saveHist();renderHist();
+}
+function delHist(i){hist.splice(i,1);saveHist();renderHist();}
+function renderHist(){
+  updateAvgs();renderChart();
+  const el=document.getElementById('hist-list');
+  if(!hist.length){el.innerHTML='<div class="h-empty">Nenhum registro ainda.</div>';return;}
+  el.innerHTML=hist.map((r,i)=>{const hrs=Math.floor(r.dur/60),mins=r.dur%60;return`<div class="h-entry"><div><div class="he-t">${pad(r.wh)}:${pad(r.wm)}</div><div class="he-m">${r.date} · ${r.cycles} ciclos · ${hrs}h${mins?mins+'min':''}</div></div><button class="btn-del" onclick="delHist(${i})">×</button></div>`;}).join('');
+}
+function avg(a){return a.length?(a.reduce((s,v)=>s+v,0)/a.length).toFixed(1):'—';}
+function updateAvgs(){
+  const now=new Date();
+  const w=hist.filter(r=>new Date(r.date)>=new Date(now-7*864e5)).map(r=>r.cycles);
+  const mo=hist.filter(r=>new Date(r.date)>=new Date(now-30*864e5)).map(r=>r.cycles);
+  document.getElementById('avg-w').textContent=avg(w);
+  document.getElementById('avg-m').textContent=avg(mo);
+  document.getElementById('avg-t').textContent=avg(hist.map(r=>r.cycles));
+}
+function renderChart(){
+  const svg=document.getElementById('hist-chart');
+  if(hist.length<2){svg.innerHTML='<text x="190" y="40" fill="#3a3060" text-anchor="middle" font-size="11" font-family="DM Sans,sans-serif">Registre ao menos 2 noites</text>';return;}
+  const pts=[...hist].reverse().slice(-10),vals=pts.map(r=>r.cycles);
+  const mn=Math.min(...vals),mx=Math.max(...vals),range=mx-mn||1;
+  const W=380,H=70,p=8;
+  const xs=pts.map((_,i)=>p+i*(W-2*p)/(pts.length-1)),ys=vals.map(v=>H-p-(v-mn)/range*(H-2*p));
+  let d=`M${xs[0]},${ys[0]}`;for(let i=1;i<xs.length;i++){const cx=(xs[i-1]+xs[i])/2;d+=` C${cx},${ys[i-1]} ${cx},${ys[i]} ${xs[i]},${ys[i]}`;}
+  const area=d+` L${xs[xs.length-1]},${H} L${xs[0]},${H} Z`;
+  svg.innerHTML=`<defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#b48ef4" stop-opacity=".35"/><stop offset="100%" stop-color="#b48ef4" stop-opacity=".02"/></linearGradient></defs><path d="${area}" fill="url(#lg)"/><path d="${d}" fill="none" stroke="#b48ef4" stroke-width="1.8" stroke-linejoin="round"/>${xs.map((x,i)=>`<circle cx="${x}" cy="${ys[i]}" r="3" fill="#b48ef4" opacity=".7"/>`).join('')}`;
+}
+renderHist();
+</script>
+
+<div id="install-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;background:var(--surface);border:1px solid rgba(180,142,244,0.3);border-radius:16px;padding:14px 20px;align-items:center;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-width:360px;width:90%;">
+  <span style="font-size:24px">🌙</span>
+  <div style="flex:1">
+    <div style="font-weight:600;font-size:14px">Instalar Lunare</div>
+    <div style="color:var(--muted);font-size:12px">Adicionar à tela inicial</div>
+  </div>
+  <button onclick="installApp()" style="background:linear-gradient(135deg,#7c5cbf,#b48ef4);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:600;padding:8px 16px;cursor:pointer;font-family:inherit;">Instalar</button>
+  <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:0 4px;">×</button>
+</div>
+
+<script>
+// ── Service Worker (offline support) ───────────────────────────────────────
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE = 'lunare-v1';
+    const ASSETS = [location.href];
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    });
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+// ── Install prompt (Android) ────────────────────────────────────────────────
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+function installApp(){
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(() => {
+    deferredPrompt = null;
+    document.getElementById('install-banner').style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').style.display = 'none';
+});
+</script>
+</body>
+</html>
